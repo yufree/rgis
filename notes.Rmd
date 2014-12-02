@@ -1,0 +1,69 @@
+---
+title: "R GIS"
+author: "Miao YU"
+date: "2014年11月28日"
+output: html_document
+---
+
+安装如下扩展包：
+```{r}
+install.packages(c('sp','raster','rasterVis','maptools','rgeos'))
+# install.packages("~/Downloads/rgeos_0.3-8.tar", repos = NULL, type = 'source')
+# download a framework from http://www.kyngchaos.com/ for OSX
+library(sp)  # classes for spatial data
+library(raster)  # grids, rasters
+library(rasterVis)  # raster visualisation
+library(maptools)
+library(rgeos)                 
+```
+先画张图
+```{r}
+install.packages('rgdal')
+library(dismo)
+library(rgdal)
+mymap <- gmap("France")  # choose whatever country
+plot(mymap)
+mymap <- gmap("France", type = "satellite")
+plot(mymap)
+library(RgoogleMaps)
+newmap <- GetMap(center = c(36.7, -5.9), zoom = 10, destfile = "newmap.png", 
+    maptype = "satellite")
+
+# Now using bounding box instead of center coordinates:
+newmap2 <- GetMap.bbox(lonR = c(-5, -6), latR = c(36, 37), destfile = "newmap2.png", 
+    maptype = "terrain")
+
+# Try different maptypes
+newmap3 <- GetMap.bbox(lonR = c(-5, -6), latR = c(36, 37), destfile = "newmap3.png", 
+    maptype = "satellite")
+```
+
+library(maps) # 生成地图
+library(mapdata) # 包括’maps’的基本数据
+library(maptools) # 处理空间对象数据的工具
+readShapePoly # 读取多边形
+readShapeLines # 读取线性图层
+readShapePoints # 读取点图层
+
+library(mapproj) # 产生投影地图
+library(raster) # 处理光栅地图
+library(ggplot2) # 生成地图
+library(gpclib) # 产生多边形
+
+
+
+```{r}
+# 以下三个R扩展包分别用来生成地图，提供数据，提供其他工具
+if(!require('maps')){
+    install.packages(c('maps','mapdata','maptools'))
+    library('maps')
+    library('mapdata')
+    library('maptools')
+}
+# 来张世界地图
+map()
+# 来张中国地图
+map('china')
+
+```
+
