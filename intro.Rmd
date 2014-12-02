@@ -22,13 +22,16 @@ output: html_document
 
 说了半天，该动手了。这里我们不用专业的GIS软件去实现，太贵。也不用大型互联网公司提供的民用地图网站，太low。作为R大法受害者，我们选择R配合软件包来实现地图的绘制。
 
-# R 新手上路
+# 初探R
 
-到[CRAN](http://cran.r-project.org)上去下载对应你操作系统的R，然后打开一个R窗口，因为这是个命令行工具，你大概就看到个大于号。
+到[CRAN](http://cran.r-project.org)上去下载对应你操作系统的R，然后打开一个R窗口，因为这是个命令行软件，你大概就看到个大于号。输入下面命令，你应该可以看到一个世界地图。
 
-```{r}
-install.packages('maps')
-library(maps)
+```{r,message=FALSE}
+if(!require('maps')){
+    install.packages('maps')
+    library('maps')
+    }
 map()
 ```
 
+OK，这是个最简单的演示，后面我们先科普下R，然后再用R去构建我们的GIS。
