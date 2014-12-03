@@ -36,7 +36,7 @@ plot(meuse, pch=1, cex = .05*sqrt(meuse$zinc))
 
 # 空间数据读取
 
-常见的空间数据格式为`*.shp`文件，我在这里不去解析这个文件结构了，你只要知道这个文件可以被`maptools`包中的`readShapePoly`函数读取为`sp`包的空间数据格式就可以了。但比较杯具的是这个包只管读取多边形数据，同样保存在`*.shp`文件中的属性就不管了，这时候建议使用`rgdal`包中的`readOGR`函数来读取。当我们将常见数据转换到`sp`包的数据类型后，我建议使用`raster`包中的函数`raster`转换为`raster`包内的数据类型。原因是这个包提供了更丰富的GIS函数功能，不过眼下我们只关注画出图来，这个可以不考虑（其实也可以[直接](http://www.r-bloggers.com/converting-shapefiles-to-rasters-in-r/)用`raster`包读取`*.shp`文件）。在数据读取时，你最好注意下原始数据的坐标投影方式，例如：
+常见的空间数据格式为`*.shp`文件，我在这里不去解析这个文件结构了，你只要知道这个文件可以被`maptools`包中的`readShapePoly`函数读取为`sp`包的空间数据格式就可以了。使用`rgdal`包中的`readOGR`函数也可以实现类似的功能。当我们将常见数据转换到`sp`包的数据类型后，我建议使用`raster`包中的函数`raster`转换为`raster`包内的数据类型。原因是这个包提供了更丰富的GIS函数功能，不过眼下我们只关注画出图来，这个可以不考虑（其实也可以[直接](http://www.r-bloggers.com/converting-shapefiles-to-rasters-in-r/)用`raster`包读取`*.shp`文件）。在数据读取时，你最好注意下原始数据的坐标投影方式，例如：
 ```{r message=FALSE}
 # rworldmap提供了很多现成的地图
 library(rworldmap)

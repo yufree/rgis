@@ -104,7 +104,7 @@ plot(meuse, pch=1, cex = .05*sqrt(meuse$zinc))</code></pre>
 </div>
 <div class="section level1">
 <h1>空间数据读取</h1>
-<p>常见的空间数据格式为<code>*.shp</code>文件，我在这里不去解析这个文件结构了，你只要知道这个文件可以被<code>maptools</code>包中的<code>readShapePoly</code>函数读取为<code>sp</code>包的空间数据格式就可以了。但比较杯具的是这个包只管读取多边形数据，同样保存在<code>*.shp</code>文件中的属性就不管了，这时候建议使用<code>rgdal</code>包中的<code>readOGR</code>函数来读取。当我们将常见数据转换到<code>sp</code>包的数据类型后，我建议使用<code>raster</code>包中的函数<code>raster</code>转换为<code>raster</code>包内的数据类型。原因是这个包提供了更丰富的GIS函数功能，不过眼下我们只关注画出图来，这个可以不考虑（其实也可以<a href="http://www.r-bloggers.com/converting-shapefiles-to-rasters-in-r/">直接</a>用<code>raster</code>包读取<code>*.shp</code>文件）。在数据读取时，你最好注意下原始数据的坐标投影方式，例如：</p>
+<p>常见的空间数据格式为<code>*.shp</code>文件，我在这里不去解析这个文件结构了，你只要知道这个文件可以被<code>maptools</code>包中的<code>readShapePoly</code>函数读取为<code>sp</code>包的空间数据格式就可以了。使用<code>rgdal</code>包中的<code>readOGR</code>函数也可以实现类似的功能。当我们将常见数据转换到<code>sp</code>包的数据类型后，我建议使用<code>raster</code>包中的函数<code>raster</code>转换为<code>raster</code>包内的数据类型。原因是这个包提供了更丰富的GIS函数功能，不过眼下我们只关注画出图来，这个可以不考虑（其实也可以<a href="http://www.r-bloggers.com/converting-shapefiles-to-rasters-in-r/">直接</a>用<code>raster</code>包读取<code>*.shp</code>文件）。在数据读取时，你最好注意下原始数据的坐标投影方式，例如：</p>
 <pre class="r"><code># rworldmap提供了很多现成的地图
 library(rworldmap)
 # 来张地球行政图
