@@ -1,0 +1,80 @@
+---
+title: "地理信息系统与R－开放地图资源"
+author: "Miao YU"
+date: "2014年12月4日"
+output: html_document
+---
+
+好了，前言里我说过，这系列文章倾向于解决一些how to的问题，关于why的问题前面文章里应该覆盖的差不多了，看了思路会清晰些，但其实不看也可以。从这篇开始介绍一些面向实际需求的解决方案，首先是画图并描绘数据框中的变量，给予变量的空间统计以后再说，这篇主要关注内置于R包中的地图数据。
+
+# 应该成为历史的maps包与mapdata包
+
+你可以构建一个360*180的矩阵用来表示经纬度，把表示国界的多边形映射到这个矩阵上其实就是个1度级别的低分辨世界地图。这样的地图R里面的`maps`包里就有：
+
+```{r}
+library(maps)
+map()
+```
+
+不过这个地图来自[CIA World Data Bank II](http://www.evl.uic.edu/pape/data/WDB/)，由于比较古老，苏联还在。分辨率高一点的地图被单独写到mapdata包里去了，里面包括中国（china），日本（japan），新西兰（nzHires），世界河流（rivers），太平洋中心世界地图（world2Hires） 和高分辨世界地图（worldHires）六张地图。展示如下：
+
+```{r}
+library(mapdata)
+par(mfrow=c(2,3))
+par(mai=c(0,0,0,0),xaxs="i",yaxs="i")
+map('china')
+map('japan')
+map('nzHires')
+map('rivers')
+map('worldHires')
+map('world2Hires')
+```
+
+里面中国与日本都是分省地图，杯具的是这一套地图应该是1991年之前的，除了老大哥还活着外连重庆都没分出来，更麻烦的是这俩包自己搞了一套数据结构，跟`sp`包不兼容，所以这套图能不用就不用。
+
+# 相对可靠的rworldmap包
+
+`rworldmap`包是`maps`与`mapsdata`包的替代品，一方面支持`sp`包，这样就可以构建空间数据框，另一方面地图也比较新且关注国别级的相对高分辨地图，支持使用国别代码来提取数据。如果你打算绘制全球尺度的地图并简单标注信息，这套图是不二之选：你只要在你的数据中单独列一列标注好[国别代码](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)，然后这个包就可以把你的数据链接成为一个空间数据框。这时我们就可以用数据框中的变量绘制世界范围的信息图了。
+
+```{r message=FALSE}
+library(rworldmap)
+# 导入示例数据
+data(countryExData)
+# 用class看看这个数据包的数据类型
+class(countryExData)
+# 转换为sp包定义的格式
+sPDF <- joinCountryData2Map( countryExData,
+                             joinCode = "ISO3",
+                             nameJoinColumn = "ISO3V10")
+# 检查格式
+class(sPDF)
+# 设定输出边框
+par(mai=c(0,0,0.2,0),xaxs="i",yaxs="i")
+# 使用POP_EST变量绘制全球人口分布图并调整标注小一些
+mapParams <- mapCountryData( sPDF, nameColumnToPlo="POP_EST", 
+                             addLegend=FALSE )
+do.call(addMapLegend, c(mapParams, legendWidth=0.5, legendMar = 2))
+# 提取中国地图 不过你懂的 少了一个岛
+# 也不要尝试rworldxtra包了 一样的
+sPDFchina <- sPDF[which(sPDF$NAME == 'China'),]
+mapCountryData(sPDFchina, nameColumnToPlot='NAME', mapTitle='China mainland', addLegend = FALSE)
+```
+
+# 追溯历史的cshapes包
+
+前面我们看到了，国际上对中国领土是有争议的，但其实这么多年来很多国家都有领土问题，`cshapes`包提供了从1946年到2012年的历史边界。这样我们就可以在1946年的数据中得到中国地图了，不过香港澳门咋办？唉，不止这个，还有南海问题。总之用这些包时要么你注明大陆，要么就从网上找数据，统计之都上有篇[文章](http://cos.name/2009/07/drawing-china-map-using-r/)提供了全国分省地图及数据。另外一篇[文章](http://cos.name/2014/08/r-maps-for-china/)的文末也注明了源自[国家基础地理信息中心的网站](http://www.sbsm.gov.cn/article/zxbs/dtfw/)的地图数据，不过目前官方不提供下载，只能到大厅去买。发表文章时一定要注意，如果你注明了中国，就一定要用全图而绝不能用有争议的图，原则问题不要碰触。
+
+```{r}
+library(cshapes)
+# 提取1946年的世界地图
+cshp.1946 <- cshp(date=as.Date("1946-1-1"), useGW=TRUE)
+# cshp.2012 <- cshp(date=as.Date("2012-1-1"), useGW=TRUE)
+# 提取中国
+China <- cshp.1946[which(cshp.1946$CNTRY_NAME == 'China'),]
+# China12 <- cshp.2012[which(cshp.2012$CNTRY_NAME == 'China'),]
+# 终于出现了
+# par(mfrow = c(1,2))
+plot(China)
+# plot(China12)
+```
+
