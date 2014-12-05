@@ -13,7 +13,7 @@ output: html_document
 
 其实，`ggmap`包更多的是提供了一个直接获取网络地图的接口，常见网络地图例如google map，stamen，open street map还有cloudmade都可以直接按经纬度提取地图，最后一个需要你去申请个API。当需要提取地图时，你可以通过提取`geocode`来给定地点中心坐标，然后在`get_map`中指定`source`与`maptype`存为底图图层，然后调用`ggmap`把这个图层展示出来就可以了，当然你可以不断叠加其他图层来丰富信息，也可以嵌套。示例如下：
 
-```{r message=FALSE,warning=FALSE,cache=TRUE,eval=FALSE}
+```{r message=FALSE,warning=FALSE,eval=FALSE}
 library(ggmap)
 
 # 看看google的四种地图类型
@@ -31,7 +31,7 @@ ggmap(get_map(cloc, maptype = 'hybrid')) # 混合图
 
 `ggmap`的底图经常有我们不想看到的标注，所以我更推荐使用`OpenStreetMap`包来绘制地图。一方面它默认不支持google地图，所以获取地图时阻碍较小；另一方面是因为它支持的地图来源种类更多，可以选出没有logo的底图来用。此外，它也支持`ggplot2`的作图，但其实我个人更熟悉的是基本绘图命令，这个它也支持。下面示例中列出的是国内可以不科学上网下载到的地图，可根据实际需求选用，个人倾向于`type`为esri-topo、watercolor与nps的底图，相对简单大方些。
 
-```{r,message=FALSE,warning=FALSE,cache=TRUE}
+```{r,message=FALSE,warning=FALSE}
 library(OpenStreetMap)
 nm <- c("osm", "osm-bw", "maptoolkit-topo", "mapquest",
         "mapquest-aerial", "bing", "stamen-toner","stamen-watercolor",
@@ -75,7 +75,7 @@ points(lon,lat,pch = 19,cex=0.5)
 
 前面说的行政图，交通图，地形图都算是比较常见的，但`marmap`包关注的是海底地形图，也就是海床。数据直接来自[NOAA](http://www.noaa.gov/)，很有意思，值得一玩。此外，NOAA提供了很多全球海洋数据，一般是nc格式，可用`ncdf`包读取，[这里](https://github.com/yufree/democode/blob/master/plot/oceanaveragetemp.R)有个绘制全球23年温度变化的代码，感兴趣可以自己探索下，可以看到西太平洋暖池的。
 
-```{r cache＝T,message=FALSE,warning=FALSE}
+```{r message=FALSE,warning=FALSE}
 library(marmap)
 library(lattice)
 eastsea <- getNOAA.bathy(lon1=120,lon2=131,lat1=23,lat2=33, resolution=5)
