@@ -1,7 +1,7 @@
 ---
 title: "地理信息系统与R－前言"
 author: "Miao YU"
-date: "2014年12月2日"
+date: "2014年12月1日"
 output: html_document
 ---
 # 认识地图

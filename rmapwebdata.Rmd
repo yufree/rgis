@@ -1,0 +1,94 @@
+---
+title: "地理信息系统与R－网络开放地图资源"
+author: "Miao YU"
+date: "2014年12月5日"
+output: html_document
+---
+
+其实这年头网速要是能达到硬盘读取速度的一半我们也就没必要把资料留在本机了，直接放到云端，随用随取就可以了。地图，特别是高分辨率地图如果事先分类没做好，但是在本地找到自己需要的图可能就要花不少时间。这篇主要关注来自网络的开放地图资源，也就是前面说的知道经纬度范围就可以提取的那种地图。
+
+# ggmap包
+
+`ggmap`包的作者之一Hadley Wickham写过另一个在图形可视化界鼎鼎大名的`ggplot2`包，后者贯穿了一个思想，那就是图片是由图层叠出来的。这个思想跟GIS中图层的想法很接近，每个图层说明一个变量，叠加出来给出丰富的信息图。如果你对这种作图哲学非常认同，那么`ggmap`包十分适合你。
+
+其实，`ggmap`包更多的是提供了一个直接获取网络地图的接口，常见网络地图例如google map，stamen，open street map还有cloudmade都可以直接按经纬度提取地图，最后一个需要你去申请个API。当需要提取地图时，你可以通过提取`geocode`来给定地点中心坐标，然后在`get_map`中指定`source`与`maptype`存为底图图层，然后调用`ggmap`把这个图层展示出来就可以了，当然你可以不断叠加其他图层来丰富信息，也可以嵌套。示例如下：
+
+```{r message=FALSE,warning=FALSE,cache=TRUE,eval=FALSE}
+library(ggmap)
+
+# 看看google的四种地图类型
+cloc <- c(60, 0, 130, 70)
+ggmap(get_map(cloc, maptype = 'terrain')) # 地形图
+ggmap(get_map(cloc, maptype = 'satellite')) # 卫星图
+ggmap(get_map(cloc, maptype = 'roadmap')) # 交通图
+ggmap(get_map(cloc, maptype = 'hybrid')) # 混合图
+
+```
+
+但我不是特别推荐使用`ggmap`，一方面是它默认的google地图在大陆是需要科学上网才能用，影响代码重现性；另一方面则是另外几个来源的地图总是出现这样那样的问题。但无可厚非，如果你肉身在外，这个包的画图逻辑是最清晰也最值得使用的，[这里](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/ggmap/ggmapCheatsheet.pdf)这个简单的教程会对你有帮助。
+
+# 符合国情的OpenStreetMap包
+
+`ggmap`的底图经常有我们不想看到的标注，所以我更推荐使用`OpenStreetMap`包来绘制地图。一方面它默认不支持google地图，所以获取地图时阻碍较小；另一方面是因为它支持的地图来源种类更多，可以选出没有logo的底图来用。此外，它也支持`ggplot2`的作图，但其实我个人更熟悉的是基本绘图命令，这个它也支持。下面示例中列出的是国内可以不科学上网下载到的地图，可根据实际需求选用，个人倾向于`type`为esri-topo、watercolor与nps的底图，相对简单大方些。
+
+```{r,message=FALSE,warning=FALSE,cache=TRUE}
+library(OpenStreetMap)
+nm <- c("osm", "osm-bw", "maptoolkit-topo", "mapquest",
+        "mapquest-aerial", "bing", "stamen-toner","stamen-watercolor",
+	"osm-german", "esri", "esri-topo","osm-wanderreitkarte",
+        "nps", "apple-iphoto", "skobbler","opencyclemap", 
+        "osm-transport", "osm-public-transport","osm-bbike","osm-bbike-german")
+par(mfrow=c(4,5))
+for(i in 1:length(nm)){
+	map = openmap(c(lat= 35,lon= 100),
+                      c(lat= 15,lon= 123),
+			minNumTiles=9,type=nm[i])
+	plot(map)
+	title(nm[i],cex.main=1)
+}
+```
+
+# raster包
+
+`raster`包其实算是个比较完整的GIS解决方案，其`getData`函数可以说是个懒人包，选择不多，但也够用。值得注意的是gdam上下载到直接是`sp`包所定义的空间数据框，你可以再次提取，其实科研用地图的话足够了：如果你需要按照行政区来画图或标注，用gdam数据；如果按照经纬度，用SRTM包提取栅格图，出图效果足够了。
+
+```{r message=FALSE,warning=FALSE}
+library(raster)
+# 利用gdam行政区划地图凑出中国分省地图
+adm0 <- getData('GADM', country='China', level=1)
+adm1 <- getData('GADM', country='Taiwan', level=0)
+adm2 <- getData('GADM', country='Hong kong', level=0)
+adm3 <- getData('GADM', country='Macao', level=0)
+plot(adm0, col = as.factor(adm0$NAME_1))
+plot(adm1, col = as.factor(adm1$NAME_ENGLISH), add = T)
+plot(adm2, col = as.factor(adm1$NAME_ENGLISH),add = T)
+plot(adm3, col = as.factor(adm1$NAME_ENGLISH),add = T)
+# 利用SRTM90米分辨率地图给出地形图地图并标注点
+adm <- getData('SRTM', lon=120, lat=30)
+lon <- rnorm(100,121.6,0.03)
+lat <- rnorm(100,28.4,0.03)
+plot(adm,ylim = c(28.3,28.5),xlim = c(121.5,121.7))
+points(lon,lat,pch = 19,cex=0.5)
+```
+
+# marmap包
+
+前面说的行政图，交通图，地形图都算是比较常见的，但`marmap`包关注的是海底地形图，也就是海床。数据直接来自[NOAA](http://www.noaa.gov/)，很有意思，值得一玩。此外，NOAA提供了很多全球海洋数据，一般是nc格式，可用`ncdf`包读取，[这里](https://github.com/yufree/democode/blob/master/plot/oceanaveragetemp.R)有个绘制全球23年温度变化的代码，感兴趣可以自己探索下，可以看到西太平洋暖池的。
+
+```{r cache＝T,message=FALSE,warning=FALSE}
+library(marmap)
+library(lattice)
+eastsea <- getNOAA.bathy(lon1=120,lon2=131,lat1=23,lat2=33, resolution=5)
+# 绘制东海海床3D海床纵切面
+plot(eastsea, image = TRUE)
+# 切面选取
+out <- get.box(eastsea,x1=121, y1=31,x2=128,y2=24, width=2,col=2)
+wireframe(out, shade=T, zoom=1.1, aspect=c(1/8, 0.1),
+	screen = list(z = -20, x = -50),
+	par.settings = list(axis.line = list(col = "transparent")),
+	par.box = c(col = rgb(0,0,0,0.1)))
+```
+
+![全球23年海洋温度变化](https://yufree.github.com/blogcn/figure/oceantemp.gif)
+
+OK，浮光掠影，看到这里你应该至少可以画出自己满意的地图了，如果为了写论文发文章也就可以到此为止了，后面的内容就开始偏空间统计分析了，有些基础知识需要加深，我也不会费力去解释一些包的选择了。
