@@ -1,5 +1,5 @@
 ---
-title: "地理信息系统与R－前言"
+title: "地理信息系统与R－从地图到地理信息系统"
 author: "Miao YU"
 date: "2014年12月1日"
 output: html_document
