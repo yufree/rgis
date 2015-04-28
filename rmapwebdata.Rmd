@@ -78,7 +78,7 @@ points(lon,lat,pch = 19,cex=0.5)
 ```{r message=FALSE,warning=FALSE}
 library(marmap)
 library(lattice)
-eastsea <- getNOAA.bathy(lon1=120,lon2=131,lat1=23,lat2=33, resolution=5)
+eastsea <- getNOAA.bathy(lon1=120,lon2=131,lat1=23,lat2=33)
 # 绘制东海海床3D海床纵切面
 plot(eastsea, image = TRUE)
 # 切面选取
