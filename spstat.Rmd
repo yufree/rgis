@@ -1,0 +1,115 @@
+---
+title: "地理信息系统与R－空间统计学入门"
+author: "Miao Yu"
+date: "2015年4月28日"
+output: html_document
+---
+
+除了作图，还是要谈一点空间统计学入门级的东西（其实我就知道这么多）而我们的目标问题是空间中点分布及其与相关因素的关系。说简单点就是给你一堆空间里的点，这些点的分布是否随机（这是个分布的假设检验问题），其分布不随机的话找出相关的变量并建模（这是个建模问题）。好，先看基本概念：
+
+## 空间密度
+
+均匀分布定义：
+
+$$\bar \lambda = \frac{n(x)}{area(W)}$$
+
+不均匀分布：密度对于面积的积分
+
+空间里某点的分布我们用空间密度来描述，记住这个就可以了。
+
+## 空间随机性的检验
+
+一般来说，我们认为均匀泊松点过程，也就是完全空间随机（CSR）是空间随机性假设检验的空分布，其严格定义如下：
+
+- N个点落入B区域是一个泊松随机变量
+- B区域内点个数的期望为密度$\lambda$与B面积的乘积
+- 如果B1与B2不相连，那么其中个数是独立随机变量
+- 如果某区域B中有N个点，那么这N个点在B中是独立均匀分布的
+
+```{r}
+# 载入spatstat包，该包常用来进行空间统计分析
+library(spatstat)
+data(nztrees)
+data(letterR)
+# rpoispp用来模拟一个均匀泊松点过程，参数为空间密度，窗口可自定义
+plot(rpoispp(100, win = letterR))
+# runifpoint用来模拟一个固定数量的均匀泊松点过程
+plot(runifpoint(100, win = letterR))
+# 一般可用来作为空间分布的空假设来进行卡方检验
+quadrat.test(nztrees, nx = 3, ny = 2)
+```
+
+## Kolmogorov-Smirnov 检验
+
+CSR的独立假设通常是不能满足的，因此用这种方法进行检验功效不足，一般可以用Kolmogorov-Smirnov 检验，制定一个经验点分布模式来进行检验。Berman 提出了另一个检验，如果模型正确，两条垂直线会比较接近
+
+```{r}
+# 对假设分布的优度检验
+(KS <- cdf.test(nztrees, "x"))
+plot(KS)
+# 相关因素的优度检验
+data(copper)
+X <- copper$SouthPoints
+L <- copper$SouthLines
+D <- distmap(L, eps=1)
+# test of CSR
+(BM <- berman.test(X, D))
+plot(BM)
+(BM2 <- berman.test(X, D, "Z2"))
+plot(BM2)
+```
+
+## 空间统计建模
+
+如果空间点的分布符合某个分布，那么下一步就是对这个分布的参数进行估计，或者说寻找这个参数的影响因子。一般而言，需要进行极大似然估计，结果可以得到某个参数或者这个参数的模型。模型的选择与检验与常规的线性回归相似：模型选择可以使用方差分析，也可以使用其他的高级方法来选择变量；检验则是对残差或标准误作图，观察是否像噪音。同时，我们也可以对模型进行模拟观察生成的数据。当然，上面说的仅仅是对点的分布而言。而点分布模式也可以用fly plot或者Morishita plot来直观检测。
+
+```{r}
+# 原始数据
+plot(bei)
+# 构建模型
+fit <- ppm(bei, ~x + y)
+# 观察拟合效果
+plot(predict(fit))
+plot(bei, add = TRUE, pch = "+")
+
+# 观察标准误
+SE <- predict(fit, type = "se")
+plot(SE, main = "standard error of fitted intensity")
+# 数据模拟
+fitprop <- ppm(bei, ~offset(log(slope)), covariates = list(slope = bei.extra$grad))
+X <- rmh(fitprop)
+plot(X, main = "realisation of fitted model")
+# 模型检验与残差作图
+data(bei)
+fit <- ppm(bei, ~x)
+M <- quadrat.test(fit, nx = 4, ny = 2)
+kstest(fit, "y")
+diagnose.ppm(fit, which = "smooth")
+```
+
+其中，如果直观讨论两者关系，则有
+
+$$\lambda(u) = \rho(Z(u))$$
+
+也就是将点的分布看作是受变量影响的函数，可以用核函数来估计展示：
+
+```{r}
+plot(rhohat(bei, bei.extra$grad))
+```
+
+空间数据另一个特点是分布受距离影响，例如铜矿的分布可能与断层距离有关，这时可用等高线图表示这种变化，然后用密度函数刻画这种关系：
+
+```{r}
+data(copper)
+X <- rotate(copper$SouthPoints, pi/2) 
+L <- rotate(copper$SouthLines, pi/2)
+Z <- distmap(L)
+plot(L, lwd = 2, main = "") 
+contour(Z, add = TRUE)
+plot(rhohat(X, Z), xlab = "Distance to nearest fault")
+# distfun函数可用来返回一个函数，输入坐标给出密度
+f <- distfun(L)
+f(-42, 10)
+```
+
+以上就是一个简单的空间统计入门，说白了还是统计学里基本概念放到空间分布里去具体讨论，适合观察性研究而不太适合野外采样研究，因为野外研究受采样条件影响会发生偏差而类似遥感数据的观察研究就更适合这类方法。
